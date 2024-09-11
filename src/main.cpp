@@ -139,13 +139,13 @@ int main(int argc, char* argv[])
             return 1;
     }
 
-    std::string input = result["input"].as<std::string>();
-    std::string output = result["output"].as<std::string>();
+    fs::path input = result["input"].as<std::string>();
+    fs::path output = result["output"].as<std::string>();
 
     // 836974.635391304,815456.572217391
     // 114.18373090671055,22.277972645442148
     tinyxml2::XMLDocument doc;
-    std::string metadata_path = input + "metadata.xml";
+    fs::path metadata_path = input / "metadata.xml";
     if (doc.LoadFile(metadata_path.c_str()) != tinyxml2::XML_SUCCESS) {
         std::cerr << "Failed to load XML file: " << metadata_path << std::endl;
         return 1;

@@ -43,10 +43,10 @@ std::vector<double> box_to_tileset_box(const std::vector<double>& box_v) {
     return box_new;
 }
 
-void osgb_batch_convert(const std::string& input, const std::string& output, double center_x, double center_y){
-    std::string path = input + "Data";
+void osgb_batch_convert(const fs::path& input, const fs::path& output, double center_x, double center_y){
+    fs::path path = input / "Data";
     if (!fs::exists(path) || !fs::is_directory(path)) {
-        throw std::runtime_error("Directory " + path + " does not exist");
+        throw std::runtime_error("Directory " + path.string() + " does not exist");
     }
 
     mkdirs(output.c_str());
@@ -63,7 +63,7 @@ void osgb_batch_convert(const std::string& input, const std::string& output, dou
             fs::path osgb = path_tile / (stem + ".osgb");
 
             if (fs::exists(osgb) && !fs::is_directory(osgb)) {
-                fs::path out_dir = output + "Data/" + stem;
+                fs::path out_dir = output / "Data" / stem;
                 fs::create_directories(out_dir);
                 std::vector<double> box(6, 0.0);
                 int len = 0;
@@ -138,7 +138,7 @@ void osgb_batch_convert(const std::string& input, const std::string& output, dou
         std::string uri_path = path;
         size_t pos = uri_path.find(output);
         if (pos != std::string::npos) {
-            uri_path.replace(pos, output.length(), "./");
+            uri_path.replace(pos, output.string().length(), "./");
         }
 
         nlohmann::json tile_object = {
@@ -162,8 +162,8 @@ void osgb_batch_convert(const std::string& input, const std::string& output, dou
             {"root", json_val}
         };
 
-        write_file(std::string(path + "/tileset.json").c_str(), sub_tile.dump().c_str(), sub_tile.dump().size());
+        write_file(std::string(fs::path(path) / "tileset.json").c_str(), sub_tile.dump().c_str(), sub_tile.dump().size());
     }
     
-    write_file(std::string(output + "/tileset.json").c_str(), root_json.dump().c_str(), root_json.dump().size());
+    write_file(std::string(output / "tileset.json").c_str(), root_json.dump().c_str(), root_json.dump().size());
 }
