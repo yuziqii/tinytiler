@@ -1,0 +1,15 @@
+[submodule "extern/tinyxml2"]
+	path = extern/tinyxml2
+	url = https://github.com/leethomason/tinyxml2.git
+[submodule "extern/cxxopts"]
+	path = extern/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+[submodule "extern/earcut"]
+	path = extern/earcut
+	url = https://github.com/mapbox/earcut.hpp.git
+[submodule "extern/nlohmann-json"]
+	path = extern/nlohmann-json
+	url = https://github.com/nlohmann/json.git
+[submodule "extern/proj"]
+	path = extern/proj
+	url = https://github.com/OSGeo/PROJ.git
