@@ -7,6 +7,23 @@
 #include "osgb.h"
 #include "tileset.h"
 
+#include <unistd.h>
+#include <limits.h>
+
+#include <cmath>
+#include <iomanip>
+#include <proj/coordinateoperation.hpp>
+#include <proj/crs.hpp>
+#include <proj/io.hpp>
+#include <proj/util.hpp>
+#include <proj.h>
+#include <filesystem>
+
+using namespace NS_PROJ::crs;
+using namespace NS_PROJ::io;
+using namespace NS_PROJ::operation;
+using namespace NS_PROJ::util;
+
 struct srs {
     std::string authority;
     int code;
@@ -118,6 +135,61 @@ public:
     }
 };
 
+
+bool transform(double source_x, double source_y, double& target_x, double& target_y, int source_crs){
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    if (count == -1) {
+        return false;
+    }
+
+    std::string full_path(result, count);
+    size_t pos = full_path.find_last_of('/');
+    if (pos == std::string::npos) {
+        return false;
+    }
+
+    auto path = full_path.substr(0, pos);
+
+    PJ_CONTEXT *ctx = proj_context_create();
+    auto dbContext = DatabaseContext::create(path+"/proj.db", {}, ctx);
+    auto search_path = path.c_str();
+    proj_context_set_search_paths(ctx, 1, &search_path);
+    auto authFactory = AuthorityFactory::create(dbContext, std::string());
+
+    auto coord_op_ctxt =
+        CoordinateOperationContext::create(authFactory, nullptr, 0.0);
+
+    auto authFactoryEPSG = AuthorityFactory::create(dbContext, "EPSG");
+
+    auto sourceCRS = authFactoryEPSG->createCoordinateReferenceSystem(std::to_string(source_crs));
+
+    auto targetCRS = authFactoryEPSG->createCoordinateReferenceSystem("4326");
+
+    auto list = CoordinateOperationFactory::create()->createOperations(
+        sourceCRS, targetCRS, coord_op_ctxt);
+    assert(!list.empty());
+    auto transformer = list[0]->coordinateTransformer(ctx);
+
+    // Perform the coordinate transformation.
+    PJ_COORD c = {{
+        source_y,    // latitude in degree
+        source_x,     // longitude in degree
+        0.0,     // z ordinate. unused
+        HUGE_VAL // time ordinate. unused
+    }};
+    c = transformer->transform(c);
+    target_x = c.v[1];
+    target_y = c.v[0];
+    // Display result
+    // std::cout << std::fixed << std::setprecision(10);
+    // std::cout << "target_y: " << target_y << std::endl;  // should be 426857.988
+    // std::cout << "target_x: " << target_x << std::endl; // should be 5427937.523
+
+    proj_context_destroy(ctx);
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     cxxopts::Options options("osgb2tiles", "A simple program which can convert osgb files to 3dtiles.");
@@ -159,16 +231,8 @@ int main(int argc, char* argv[])
 
     auto metadata = model_metadata::from_xml(root);
     if (metadata.srs_.authority == "EPSG"){
-        if (metadata.srs_.code == 4326){
-            osgb_batch_convert(input, output, metadata.srs_origin_.x, metadata.srs_origin_.y);
-        }else{
-            // TODO: to be implemented
-            std::cerr << "Error: The spatial reference system '" 
-                      << metadata.srs_.to_string() 
-                      << "' is not supported. Please manually convert it to 'EPSG:4326'." 
-                      << std::endl;
-            return 1;
-        }
+        transform(metadata.srs_origin_.x, metadata.srs_origin_.y, metadata.srs_origin_.x, metadata.srs_origin_.y, metadata.srs_.code);
+        osgb_batch_convert(input, output, metadata.srs_origin_.x, metadata.srs_origin_.y);
     }
     else if (metadata.srs_.authority == "ENU"){
         // TODO: to be implemented

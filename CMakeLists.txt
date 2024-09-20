@@ -36,4 +36,5 @@ target_link_libraries(${TARGET_NAME}
     nlohmann_json::nlohmann_json
     cxxopts::cxxopts
     tinyxml2::tinyxml2
+    PROJ::proj
 )
