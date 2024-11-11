@@ -43,7 +43,7 @@ std::vector<double> box_to_tileset_box(const std::vector<double>& box_v) {
     return box_new;
 }
 
-void osgb_batch_convert(const fs::path& input, const fs::path& output, double center_x, double center_y){
+void osgb_batch_convert(const fs::path& input, const fs::path& output, double center_x, double center_y, float quality){
     fs::path path = input / "Data";
     if (!fs::exists(path) || !fs::is_directory(path)) {
         throw std::runtime_error("Directory " + path.string() + " does not exist");
@@ -67,7 +67,7 @@ void osgb_batch_convert(const fs::path& input, const fs::path& output, double ce
                 fs::create_directories(out_dir);
                 std::vector<double> box(6, 0.0);
                 int len = 0;
-                auto out_ptr = osgb23dtile_path(osgb.string().c_str(), out_dir.string().c_str(), box.data(), &len, rad_x, rad_y, 100, true);
+                auto out_ptr = osgb23dtile_path(osgb.string().c_str(), out_dir.string().c_str(), box.data(), &len, rad_x, rad_y, 100, true, quality);
                 std::vector<char> json_buf;
                 if (!out_ptr)
                 {

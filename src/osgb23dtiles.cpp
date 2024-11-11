@@ -32,6 +32,7 @@ using namespace std;
 #endif // max
 
 static bool b_pbr_texture = false;
+static float quality = 100.f;
 
 template<class T>
 void put_val(std::vector<unsigned char>& buf, T val) {
@@ -802,13 +803,13 @@ bool osgb2glb_buf(std::string path, std::string& glb_buff, MeshInfo& mesh_info) 
             if (!jpeg_buf.empty()) {
                 int buf_size = buffer.data.size();
                 buffer.data.reserve(buffer.data.size() + width * height * comp);
-                stbi_write_jpg_to_func(write_buf, &buffer.data, width, height, comp, jpeg_buf.data(), 80);
+                stbi_write_jpg_to_func(write_buf, &buffer.data, width, height, comp, jpeg_buf.data(), quality * 100);
             }
             else {
                 std::vector<char> v_data;
                 width = height = 256;
                 v_data.resize(width * height * 3);
-                stbi_write_jpg_to_func(write_buf, &buffer.data, width, height, 3, v_data.data(), 80);
+                stbi_write_jpg_to_func(write_buf, &buffer.data, width, height, 3, v_data.data(), quality * 100);
             }
             tinygltf::Image image;
             image.mimeType = "image/jpeg";
@@ -847,6 +848,7 @@ bool osgb2glb_buf(std::string path, std::string& glb_buff, MeshInfo& mesh_info) 
     // use pbr material
     if(b_pbr_texture)
     {
+        // std::cout << "use pbr texture" << std::endl;
         for (int i = 0 ; i < infoVisitor.texture_array.size(); i++)
         {
             tinygltf::Material mat = make_color_material_osgb(1.0, 1.0, 1.0);
@@ -1129,7 +1131,7 @@ encode_tile_json(osg_tree& tree, double x, double y)
 void* 
 osgb23dtile_path(const char* in_path, const char* out_path,
                     double *box, int* len, double x, double y,
-                    int max_lvl, bool pbr_texture)
+                    int max_lvl, bool pbr_texture, float q)
 {
     std::string path = osg_string(in_path);
     osg_tree root = get_all_tree(path);
@@ -1139,6 +1141,7 @@ osgb23dtile_path(const char* in_path, const char* out_path,
         return NULL;
     }
     b_pbr_texture = pbr_texture;
+    quality = q;
     do_tile_job(root, out_path, max_lvl);
     // return json and max-bbox
     extend_tile_box(root);

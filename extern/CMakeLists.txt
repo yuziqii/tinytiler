@@ -5,7 +5,7 @@ add_subdirectory(tinyxml2)
 add_subdirectory(nlohmann-json)
 
 set(BUILD_TESTING OFF)
-set(PROJ_DB_CACHE_DIR "${CMAKE_BINARY_DIR}/proj")
+set(PROJ_DB_CACHE_DIR "${CMAKE_BINARY_DIR}")
 add_subdirectory(proj)
 
 add_library(earcut INTERFACE)

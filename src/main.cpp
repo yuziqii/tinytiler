@@ -196,6 +196,7 @@ int main(int argc, char* argv[])
     options.add_options()
         ("i,input", "Input directory", cxxopts::value<std::string>())
         ("o,output", "Output directory", cxxopts::value<std::string>())
+        ("q,quality", "Quality", cxxopts::value<float>()->default_value("1.0"))
         //("f,format", "Output format (e.g., 3dtiles)", cxxopts::value<std::string>())
         ("h,help", "Print usage");
     auto result = options.parse(argc, argv);
@@ -213,6 +214,9 @@ int main(int argc, char* argv[])
 
     fs::path input = result["input"].as<std::string>();
     fs::path output = result["output"].as<std::string>();
+
+    float quality = result["quality"].as<float>();
+    quality = std::clamp(quality, 0.f, 1.f);
 
     // 836974.635391304,815456.572217391
     // 114.18373090671055,22.277972645442148
@@ -232,7 +236,7 @@ int main(int argc, char* argv[])
     auto metadata = model_metadata::from_xml(root);
     if (metadata.srs_.authority == "EPSG"){
         transform(metadata.srs_origin_.x, metadata.srs_origin_.y, metadata.srs_origin_.x, metadata.srs_origin_.y, metadata.srs_.code);
-        osgb_batch_convert(input, output, metadata.srs_origin_.x, metadata.srs_origin_.y);
+        osgb_batch_convert(input, output, metadata.srs_origin_.x, metadata.srs_origin_.y, quality);
     }
     else if (metadata.srs_.authority == "ENU"){
         // TODO: to be implemented
